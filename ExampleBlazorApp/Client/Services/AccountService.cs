@@ -5,7 +5,7 @@ namespace ExampleBlazorApp.Client.Services
 {
     public interface IAccountService
     {
-        User User { get; }
+        string Token { get; }
         Task Initialize();
         Task Login(Login model);
         Task Logout();
@@ -23,7 +23,7 @@ namespace ExampleBlazorApp.Client.Services
         private ILocalStorageService _localStorageService;
         private string _tokenKey = "token";
 
-        public User User { get; private set; }
+        public string Token { get; private set; }
 
         public AccountService(
             IHttpService httpService,
@@ -38,7 +38,7 @@ namespace ExampleBlazorApp.Client.Services
 
         public async Task Initialize()
         {
-            User = await _localStorageService.GetItem<User>(_tokenKey);
+            Token = await _localStorageService.GetItem<string>(_tokenKey);
         }
 
         public async Task Login(Login model)
@@ -49,7 +49,7 @@ namespace ExampleBlazorApp.Client.Services
 
         public async Task Logout()
         {
-            User = null;
+            Token = null;
             await _localStorageService.RemoveItem(_tokenKey);
             _navigationManager.NavigateTo("account/login");
         }
@@ -71,17 +71,17 @@ namespace ExampleBlazorApp.Client.Services
 
         public async Task Update(string id, EditUser model)
         {
-            await _httpService.Put($"/users/{id}", model);
+            //await _httpService.Put($"/users/{id}", model);
 
-            // update stored user if the logged in user updated their own record
-            if (id == User.Id)
-            {
-                // update local storage
-                User.FirstName = model.FirstName;
-                User.LastName = model.LastName;
-                User.Username = model.Username;
-                await _localStorageService.SetItem(_tokenKey, User);
-            }
+            //// update stored user if the logged in user updated their own record
+            //if (id == Token.Id)
+            //{
+            //    // update local storage
+            //    Token.FirstName = model.FirstName;
+            //    Token.LastName = model.LastName;
+            //    Token.Username = model.Username;
+            //    await _localStorageService.SetItem(_tokenKey, Token);
+            //}
         }
 
         public async Task Delete(string id)
@@ -89,8 +89,8 @@ namespace ExampleBlazorApp.Client.Services
             await _httpService.Delete($"/users/{id}");
 
             // auto logout if the logged in user deleted their own record
-            if (id == User.Id)
-                await Logout();
+            //if (id == Token.Id)
+            //    await Logout();
         }
     }
 }
