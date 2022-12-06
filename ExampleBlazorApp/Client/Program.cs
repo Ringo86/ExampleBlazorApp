@@ -15,4 +15,17 @@ builder.Services
                 .AddScoped<IHttpService, HttpService>()
                 .AddScoped<ILocalStorageService, LocalStorageService>();
 
-await builder.Build().RunAsync();
+// configure http client
+builder.Services.AddScoped(x =>
+{
+    var uriString = builder.Configuration["ApiUrl"];
+    var apiUrl = new Uri(uriString);
+    return new HttpClient() { BaseAddress = apiUrl };
+});
+
+var host = builder.Build();
+
+var accountService = host.Services.GetRequiredService<IAccountService>();
+await accountService.Initialize();
+
+await host.RunAsync();

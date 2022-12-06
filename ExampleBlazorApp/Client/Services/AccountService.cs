@@ -21,7 +21,7 @@ namespace ExampleBlazorApp.Client.Services
         private IHttpService _httpService;
         private NavigationManager _navigationManager;
         private ILocalStorageService _localStorageService;
-        private string _userKey = "user";
+        private string _tokenKey = "token";
 
         public User User { get; private set; }
 
@@ -38,19 +38,19 @@ namespace ExampleBlazorApp.Client.Services
 
         public async Task Initialize()
         {
-            User = await _localStorageService.GetItem<User>(_userKey);
+            User = await _localStorageService.GetItem<User>(_tokenKey);
         }
 
         public async Task Login(Login model)
         {
-            User = await _httpService.Post<User>("/users/authenticate", model);
-            await _localStorageService.SetItem(_userKey, User);
+            var TokenResponse = await _httpService.Post<TokenResponse>("account/login", model);
+            await _localStorageService.SetItem(_tokenKey, TokenResponse.Token);
         }
 
         public async Task Logout()
         {
             User = null;
-            await _localStorageService.RemoveItem(_userKey);
+            await _localStorageService.RemoveItem(_tokenKey);
             _navigationManager.NavigateTo("account/login");
         }
 
@@ -80,7 +80,7 @@ namespace ExampleBlazorApp.Client.Services
                 User.FirstName = model.FirstName;
                 User.LastName = model.LastName;
                 User.Username = model.Username;
-                await _localStorageService.SetItem(_userKey, User);
+                await _localStorageService.SetItem(_tokenKey, User);
             }
         }
 
