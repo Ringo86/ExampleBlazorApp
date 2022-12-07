@@ -9,7 +9,8 @@ namespace ExampleBlazorApp.Client.Services
         Task Initialize();
         Task Login(Login model);
         Task Logout();
-        Task Register(AddUser model);
+        Task Register(RegisterNewAccount model);
+        Task UpdateRegistration(RegistrationUpdate model);
         Task<IList<User>> GetAll();
         Task<User> GetById(string id);
         Task Update(string id, EditUser model);
@@ -54,9 +55,14 @@ namespace ExampleBlazorApp.Client.Services
             _navigationManager.NavigateTo("account/login");
         }
 
-        public async Task Register(AddUser model)
+        public async Task Register(RegisterNewAccount model)
         {
-            await _httpService.Post("/users/register", model);
+            await _httpService.Post("account/register", model);
+        }
+
+        public async Task UpdateRegistration(RegistrationUpdate model)
+        {
+            await _httpService.Post("account/UpdateRegistration", model);
         }
 
         public async Task<IList<User>> GetAll()

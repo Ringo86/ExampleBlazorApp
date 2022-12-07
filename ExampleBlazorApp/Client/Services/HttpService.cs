@@ -112,7 +112,6 @@ namespace ExampleBlazorApp.Client.Services
         private async Task<T> sendRequest<T>(HttpRequestMessage request)
         {
             await addJwtHeader(request);
-            //await addCORSHeader(request);
 
             // send request
             using var response = await _httpClient.SendAsync(request);
@@ -140,13 +139,6 @@ namespace ExampleBlazorApp.Client.Services
             if (user != null && isApiUrl)
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.Token);
         }
-
-        //private async Task addCORSHeader(HttpRequestMessage request)
-        //{
-        //    request.Headers.Add("Access-Control-Allow-Origin", "https://localhost/7106");
-        //    request.Headers.Add("Access-Control-Allow-Methods", "POST");
-        //    request.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
-        //}
 
         private async Task handleErrors(HttpResponseMessage response)
         {

@@ -1,0 +1,76 @@
+﻿@page "/account/editAccount"
+@inject IAccountService AccountService
+@inject IAlertService AlertService
+@inject NavigationManager NavigationManager
+@layout MainLayout
+
+<div class="card">
+    <h4 class="card-header">Edit Account</h4>
+    <div class="card-body">
+        <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label>Email</label>
+                <InputText @bind-Value="model.Email" class="form-control" />
+                <ValidationMessage For="@(() => model.Email)" />
+            </div>
+            <div class="form-group">
+                <label>Verify Current Password</label>
+                <InputText @bind-Value="model.OldPassword" type="password" class="form-control" />
+                <ValidationMessage For="@(() => model.OldPassword)" />
+            </div>
+            <div class="form-group">
+                <label>New Password</label>
+                <InputText @bind-Value="model.NewPassword" type="password" class="form-control" />
+                <ValidationMessage For="@(() => model.NewPassword)" />
+            </div>
+            <div class="form-group">
+                <label>Confirm New Password</label>
+                <InputText @bind-Value="model.ConfirmNewPassword" type="password" class="form-control" />
+                <ValidationMessage For="@(() => model.ConfirmNewPassword)" />
+            </div>
+            <div class="form-group">
+                <label>First Name</label>
+                <InputText @bind-Value="model.FirstName" class="form-control" />
+                <ValidationMessage For="@(() => model.FirstName)" />
+            </div>
+            <div class="form-group">
+                <label>Last Name</label>
+                <InputText @bind-Value="model.LastName" class="form-control" />
+                <ValidationMessage For="@(() => model.LastName)" />
+            </div>
+            <button disabled="@loading" class="btn btn-primary">
+                @if (loading) 
+                {
+                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                }
+                Update
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    RegistrationUpdate model = new RegistrationUpdate();
+    private bool loading;
+
+    private async void OnValidSubmit()
+    {
+        // reset alerts on submit
+        AlertService.Clear();
+
+        loading = true;
+        try
+        {
+            await AccountService.UpdateRegistration(model);
+            var returnUrl = NavigationManager.QueryString("returnUrl") ?? "";
+            NavigationManager.NavigateTo(returnUrl);
+        }
+        catch (Exception ex)
+        {
+            AlertService.Error(ex.Message);
+        }
+        loading = false;
+        StateHasChanged();
+    }
+}
