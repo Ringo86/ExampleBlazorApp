@@ -10,11 +10,9 @@ namespace ExampleBlazorApp.Client.Models.Account
         [Required]
         public string OldPassword { get; set; }
 
-        [Required]
         [MinLength(8, ErrorMessage = "The New Password field must be a minimum of 8 characters")]
         public string NewPassword { get; set; }
 
-        [Required]
         [CompareProperty("NewPassword")]
         public string ConfirmNewPassword { get; set; }
 

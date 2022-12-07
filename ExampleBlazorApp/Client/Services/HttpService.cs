@@ -1,6 +1,6 @@
 ﻿using ExampleBlazorApp.Client.Helpers;
-using ExampleBlazorApp.Client.Models.Account;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -22,10 +22,11 @@ namespace ExampleBlazorApp.Client.Services
 
     public class HttpService : IHttpService
     {
-        private HttpClient _httpClient;
-        private NavigationManager _navigationManager;
-        private ILocalStorageService _localStorageService;
-        private IConfiguration _configuration;
+        private HttpClient httpClient;
+        private NavigationManager navigationManager;
+        private ILocalStorageService localStorageService;
+        private IConfiguration config;
+        private const string _tokenKey = "token";
 
         public HttpService(
             HttpClient httpClient,
@@ -34,10 +35,10 @@ namespace ExampleBlazorApp.Client.Services
             IConfiguration configuration
         )
         {
-            _httpClient = httpClient;
-            _navigationManager = navigationManager;
-            _localStorageService = localStorageService;
-            _configuration = configuration;
+            this.httpClient = httpClient;
+            this.navigationManager = navigationManager;
+            this.localStorageService = localStorageService;
+            config = configuration;
         }
 
         public async Task<T> Get<T>(string uri)
@@ -97,12 +98,12 @@ namespace ExampleBlazorApp.Client.Services
             await addJwtHeader(request);
 
             // send request
-            using var response = await _httpClient.SendAsync(request);
+            using var response = await httpClient.SendAsync(request);
 
             // auto logout on 401 response
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _navigationManager.NavigateTo("account/logout");
+                navigationManager.NavigateTo("account/logout");
                 return;
             }
 
@@ -114,12 +115,12 @@ namespace ExampleBlazorApp.Client.Services
             await addJwtHeader(request);
 
             // send request
-            using var response = await _httpClient.SendAsync(request);
+            using var response = await httpClient.SendAsync(request);
 
             // auto logout on 401 response
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _navigationManager.NavigateTo("account/logout");
+                navigationManager.NavigateTo("account/logout");
                 return default;
             }
 
@@ -134,10 +135,10 @@ namespace ExampleBlazorApp.Client.Services
         private async Task addJwtHeader(HttpRequestMessage request)
         {
             // add jwt auth header if user is logged in and request is to the api url
-            var user = await _localStorageService.GetItem<User>("user");
+            string token = await localStorageService.GetItem<string>(_tokenKey);
             var isApiUrl = !request.RequestUri.IsAbsoluteUri;
-            if (user != null && isApiUrl)
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.Token);
+            if (!string.IsNullOrEmpty(token) && isApiUrl)
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
         private async Task handleErrors(HttpResponseMessage response)
@@ -147,10 +148,28 @@ namespace ExampleBlazorApp.Client.Services
             {
                 try
                 {
-                    var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-                    throw new Exception(error["message"]);
+                    string mediaTypeString = string.Empty;
+                    if (response.Content.Headers.ContentType !=null)
+                        mediaTypeString = response.Content.Headers.ContentType.MediaType;
+                    if (mediaTypeString == "application/json")
+                    {
+                        var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                        throw new Exception(error["message"]);
+                    }
+                    //else if (mediaTypeString == "application/problem+json")
+                    //{//TODO: deal with specifically application/problem+json response types
+                    //    //string responseString = await response.Content.ReadAsStringAsync();
+                    //    var details = await JsonSerializer.DeserializeAsync<ValidationProblemDetails>(response.Content.ReadAsStream());
+                    //    string errorList = string.Join(',',details.Errors.Values);
+                    //    throw new Exception(errorList);
+                    //}
+                    else
+                    {
+                        string responseString = await response.Content.ReadAsStringAsync();
+                        throw new Exception(responseString);
+                    }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     throw ex;
                 }

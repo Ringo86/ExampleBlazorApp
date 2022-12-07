@@ -11,18 +11,15 @@ namespace ExampleBlazorApp.Client.Services
         Task Logout();
         Task Register(RegisterNewAccount model);
         Task UpdateRegistration(RegistrationUpdate model);
-        Task<IList<User>> GetAll();
-        Task<User> GetById(string id);
-        Task Update(string id, EditUser model);
-        Task Delete(string id);
+        Task<RegistrationUpdate> GetRegistrationInfoAsync();
     }
 
     public class AccountService : IAccountService
     {
-        private IHttpService _httpService;
+        private IHttpService httpService;
         private NavigationManager _navigationManager;
         private ILocalStorageService _localStorageService;
-        private string _tokenKey = "token";
+        private const string _tokenKey = "token";
 
         public string Token { get; private set; }
 
@@ -32,7 +29,7 @@ namespace ExampleBlazorApp.Client.Services
             ILocalStorageService localStorageService
         )
         {
-            _httpService = httpService;
+            this.httpService = httpService;
             _navigationManager = navigationManager;
             _localStorageService = localStorageService;
         }
@@ -44,7 +41,7 @@ namespace ExampleBlazorApp.Client.Services
 
         public async Task Login(Login model)
         {
-            var TokenResponse = await _httpService.Post<TokenResponse>("account/login", model);
+            var TokenResponse = await httpService.Post<TokenResponse>("account/login", model);
             await _localStorageService.SetItem(_tokenKey, TokenResponse.Token);
         }
 
@@ -57,46 +54,18 @@ namespace ExampleBlazorApp.Client.Services
 
         public async Task Register(RegisterNewAccount model)
         {
-            await _httpService.Post("account/register", model);
+            await httpService.Post("account/register", model);
         }
 
         public async Task UpdateRegistration(RegistrationUpdate model)
         {
-            await _httpService.Post("account/UpdateRegistration", model);
+            await httpService.Put("account/UpdateRegistration", model);
         }
 
-        public async Task<IList<User>> GetAll()
+        public async Task<RegistrationUpdate> GetRegistrationInfoAsync()
         {
-            return await _httpService.Get<IList<User>>("/users");
-        }
-
-        public async Task<User> GetById(string id)
-        {
-            return await _httpService.Get<User>($"/users/{id}");
-        }
-
-        public async Task Update(string id, EditUser model)
-        {
-            //await _httpService.Put($"/users/{id}", model);
-
-            //// update stored user if the logged in user updated their own record
-            //if (id == Token.Id)
-            //{
-            //    // update local storage
-            //    Token.FirstName = model.FirstName;
-            //    Token.LastName = model.LastName;
-            //    Token.Username = model.Username;
-            //    await _localStorageService.SetItem(_tokenKey, Token);
-            //}
-        }
-
-        public async Task Delete(string id)
-        {
-            await _httpService.Delete($"/users/{id}");
-
-            // auto logout if the logged in user deleted their own record
-            //if (id == Token.Id)
-            //    await Logout();
+            var regInfo = await httpService.Get<RegistrationUpdate>("account/getRegistrationInfo");
+            return regInfo;
         }
     }
 }

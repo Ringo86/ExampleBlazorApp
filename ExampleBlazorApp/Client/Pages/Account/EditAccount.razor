@@ -49,28 +49,3 @@
         </EditForm>
     </div>
 </div>
-
-@code {
-    RegistrationUpdate model = new RegistrationUpdate();
-    private bool loading;
-
-    private async void OnValidSubmit()
-    {
-        // reset alerts on submit
-        AlertService.Clear();
-
-        loading = true;
-        try
-        {
-            await AccountService.UpdateRegistration(model);
-            var returnUrl = NavigationManager.QueryString("returnUrl") ?? "";
-            NavigationManager.NavigateTo(returnUrl);
-        }
-        catch (Exception ex)
-        {
-            AlertService.Error(ex.Message);
-        }
-        loading = false;
-        StateHasChanged();
-    }
-}

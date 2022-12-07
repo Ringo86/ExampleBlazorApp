@@ -55,17 +55,17 @@
 
     protected override async Task OnInitializedAsync()
     {
-        loading = true;
-        users = await AccountService.GetAll();
-        loading = false;
+        //loading = true;
+        //users = await AccountService.GetAll();
+        //loading = false;
     }
 
     private async void DeleteUser(string id) 
     {
-        var user = users.First(x => x.Id == id);
-        user.IsDeleting = true;
-        await AccountService.Delete(id);
-        users.Remove(user);
-        StateHasChanged();
+        //var user = users.First(x => x.Id == id);
+        //user.IsDeleting = true;
+        //await AccountService.Delete(id);
+        //users.Remove(user);
+        //StateHasChanged();
     }
 }
