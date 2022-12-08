@@ -12,6 +12,7 @@ namespace ExampleBlazorApp.Client.Services
         Task Register(RegisterNewAccount model);
         Task UpdateRegistration(RegistrationUpdate model);
         Task<RegistrationUpdate> GetRegistrationInfoAsync();
+        Task VerifyEmail(Guid secretGuid);
     }
 
     public class AccountService : IAccountService
@@ -66,6 +67,11 @@ namespace ExampleBlazorApp.Client.Services
         {
             var regInfo = await httpService.Get<RegistrationUpdate>("account/getRegistrationInfo");
             return regInfo;
+        }
+
+        public async Task VerifyEmail(Guid secretGuid)
+        {
+            await httpService.Post($"account/verifyEmail?secretGuid={secretGuid}", null);
         }
     }
 }

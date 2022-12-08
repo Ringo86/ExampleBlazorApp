@@ -1,0 +1,23 @@
+﻿@page "/account/verifyEmail"
+@inject IAccountService AccountService
+@inject IAlertService AlertService
+@inject NavigationManager NavigationManager
+
+
+<div class="card">
+    <h4 class="card-header">Email Verification</h4>
+    <div class="card-body">
+        @if(!isVerificationProcessDone)
+        {
+            {<p>Verifying email link...</p>}
+        }
+        else if(verificationpassed)
+        {
+            <p>Verification Succeeded!</p>
+        }
+        else
+        {
+            <p>Verification Failed.</p>
+        }
+    </div>
+</div>

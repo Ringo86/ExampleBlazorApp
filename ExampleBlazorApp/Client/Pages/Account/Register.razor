@@ -2,6 +2,7 @@
 @inject IAccountService AccountService
 @inject IAlertService AlertService
 @inject NavigationManager NavigationManager
+@inject IConfiguration config
 
 <div class="card">
     <h4 class="card-header">Register</h4>
@@ -34,7 +35,7 @@
                 <ValidationMessage For="@(() => model.LastName)" />
             </div>
             <button disabled="@loading" class="btn btn-primary">
-                @if (loading) 
+                @if (loading)
                 {
                     <span class="spinner-border spinner-border-sm mr-1"></span>
                 }
@@ -45,8 +46,17 @@
 </div>
 
 @code {
-    RegisterNewAccount model = new RegisterNewAccount();
+    RegisterNewAccount model;
     private bool loading;
+
+    protected override void OnInitialized()
+    {
+        model = new RegisterNewAccount()
+            {
+                ReturnUri = config["VerifyEmailUrl"]
+            };
+        base.OnInitialized();
+    }
 
     private async void OnValidSubmit()
     {
