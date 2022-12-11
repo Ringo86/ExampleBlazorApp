@@ -1,4 +1,5 @@
 ﻿using ExampleBlazorApp.Client.Helpers;
+using ExampleBlazorApp.Client.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -11,7 +12,7 @@ namespace ExampleBlazorApp.Client.Services
 {
     public interface IHttpService
     {
-        Task<T> Get<T>(string uri);
+        Task<T> Get<T>(string uri, object? value = null);
         Task Post(string uri, object value);
         Task<T> Post<T>(string uri, object value);
         Task Put(string uri, object value);
@@ -26,7 +27,7 @@ namespace ExampleBlazorApp.Client.Services
         private NavigationManager navigationManager;
         private ILocalStorageService localStorageService;
         private IConfiguration config;
-        private const string _tokenKey = "token";
+        private const string TOKEN = "token";
 
         public HttpService(
             HttpClient httpClient,
@@ -41,9 +42,13 @@ namespace ExampleBlazorApp.Client.Services
             config = configuration;
         }
 
-        public async Task<T> Get<T>(string uri)
+        public async Task<T> Get<T>(string uri, object? value = null)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            HttpRequestMessage request;
+            if (value == null)
+                request = new HttpRequestMessage(HttpMethod.Get, uri);
+            else
+                request = createRequest(HttpMethod.Get, uri, value);
             return await sendRequest<T>(request);
         }
 
@@ -135,7 +140,7 @@ namespace ExampleBlazorApp.Client.Services
         private async Task addJwtHeader(HttpRequestMessage request)
         {
             // add jwt auth header if user is logged in and request is to the api url
-            string token = await localStorageService.GetItem<string>(_tokenKey);
+            string token = await localStorageService.GetItem<string>(TOKEN);
             var isApiUrl = !request.RequestUri.IsAbsoluteUri;
             if (!string.IsNullOrEmpty(token) && isApiUrl)
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -149,29 +154,45 @@ namespace ExampleBlazorApp.Client.Services
                 try
                 {
                     string mediaTypeString = string.Empty;
-                    if (response.Content.Headers.ContentType !=null)
+                    if (response.Content.Headers.ContentType != null)
                         mediaTypeString = response.Content.Headers.ContentType.MediaType;
                     if (mediaTypeString == "application/json")
                     {
                         var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
                         throw new Exception(error["message"]);
                     }
-                    //else if (mediaTypeString == "application/problem+json")
-                    //{//TODO: deal with specifically application/problem+json response types
-                    //    //string responseString = await response.Content.ReadAsStringAsync();
-                    //    var details = await JsonSerializer.DeserializeAsync<ValidationProblemDetails>(response.Content.ReadAsStream());
-                    //    string errorList = string.Join(',',details.Errors.Values);
-                    //    throw new Exception(errorList);
-                    //}
+                    //DOING reverse engineer the class
+                    else if (mediaTypeString == "application/problem+json")
+                    {//TODO: deal with specifically application/problem+json response types
+                        string responseString = await response.Content.ReadAsStringAsync();
+                        var details = await JsonSerializer.DeserializeAsync<ApiErrorDetails>(response.Content.ReadAsStream());
+                        string errorList = string.Empty;
+                        if (details.Errors != null && details.Errors.Count > 0)
+                            errorList = string.Join(',', details.Errors.Values);
+                        throw new Exception(errorList);
+                    }
                     else
                     {
                         string responseString = await response.Content.ReadAsStringAsync();
                         throw new Exception(responseString);
                     }
+
+                    //var mediaType = response.Content.Headers.ContentType?.MediaType;
+                    //if (mediaType != null && mediaType.Equals("application/problem+json", StringComparison.InvariantCultureIgnoreCase))
+                    //{
+                    //    var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(await response.Content.ReadAsStringAsync());
+                    //    problemDetails.
+                    //    //throw new ProblemDetailsException(problemDetails, response);
+                    //}
+
                 }
                 catch (Exception ex)
                 {
-                    throw ex;
+#if DEBUG
+                    Console.WriteLine(ex.Message);
+#endif
+                    //TODO: improve this error reporting ASAP
+                    throw new Exception("An error has occured.");
                 }
             }
         }

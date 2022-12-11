@@ -17,8 +17,4 @@
     <ProjectReference Include="..\Shared\ExampleBlazorApp.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="ViewModels\" />
-  </ItemGroup>
-
 </Project>

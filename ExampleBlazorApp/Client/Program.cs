@@ -1,5 +1,6 @@
 using ExampleBlazorApp.Client;
 using ExampleBlazorApp.Client.Services;
+using ExampleBlazorApp.Client.ViewModels;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -13,7 +14,11 @@ builder.Services
                 .AddScoped<IAccountService, AccountService>()
                 .AddScoped<IAlertService, AlertService>()
                 .AddScoped<IHttpService, HttpService>()
-                .AddScoped<ILocalStorageService, LocalStorageService>();
+                .AddScoped<ILocalStorageService, LocalStorageService>()
+                .AddScoped<IMessageBoardService, MessageBoardService>();
+
+builder.Services.AddTransient<IMessageBoardViewModel,MessageBoardViewModel>();
+
 
 // configure http client
 builder.Services.AddScoped(x =>

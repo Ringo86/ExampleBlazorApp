@@ -46,17 +46,8 @@
 </div>
 
 @code {
-    RegisterNewAccount model;
+    RegisterNewAccount model = new();
     private bool loading;
-
-    protected override void OnInitialized()
-    {
-        model = new RegisterNewAccount()
-            {
-                ReturnUri = config["VerifyEmailUrl"]
-            };
-        base.OnInitialized();
-    }
 
     private async void OnValidSubmit()
     {

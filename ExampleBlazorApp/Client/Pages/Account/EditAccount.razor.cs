@@ -15,7 +15,7 @@ namespace ExampleBlazorApp.Client.Pages.Account
 
         protected override async Task OnInitializedAsync()
         {
-            var regInfo = await accountService.GetRegistrationInfoAsync();
+            var regInfo = await accountService.GetInfoAsync();
             if (regInfo != null)
             {
                 model.Email = regInfo.Email;
@@ -34,7 +34,7 @@ namespace ExampleBlazorApp.Client.Pages.Account
             loading = true;
             try
             {
-                await AccountService.UpdateRegistration(model);
+                await AccountService.Update(model);
                 var returnUrl = NavigationManager.QueryString("returnUrl") ?? "";
                 NavigationManager.NavigateTo(returnUrl);
             }

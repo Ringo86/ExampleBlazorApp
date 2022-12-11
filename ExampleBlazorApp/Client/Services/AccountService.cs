@@ -10,68 +10,85 @@ namespace ExampleBlazorApp.Client.Services
         Task Login(Login model);
         Task Logout();
         Task Register(RegisterNewAccount model);
-        Task UpdateRegistration(RegistrationUpdate model);
-        Task<RegistrationUpdate> GetRegistrationInfoAsync();
+        Task Update(RegistrationUpdate model);
+        Task<RegistrationUpdate> GetInfoAsync();
         Task VerifyEmail(Guid secretGuid);
+        Task<bool> CheckPasswordReset(CheckPasswordResetRequest checkRequest);
+        Task RequestPasswordReset(string email);
+        Task ResetPassword(PasswordResetRequest request);
     }
 
     public class AccountService : IAccountService
     {
         private IHttpService httpService;
-        private NavigationManager _navigationManager;
-        private ILocalStorageService _localStorageService;
-        private const string _tokenKey = "token";
+        private NavigationManager navigationManager;
+        private ILocalStorageService localStorageService;
+        private const string TOKEN = "token";
 
         public string Token { get; private set; }
 
         public AccountService(
             IHttpService httpService,
             NavigationManager navigationManager,
-            ILocalStorageService localStorageService
-        )
+            ILocalStorageService localStorageService)
         {
             this.httpService = httpService;
-            _navigationManager = navigationManager;
-            _localStorageService = localStorageService;
+            this.navigationManager = navigationManager;
+            this.localStorageService = localStorageService;
         }
 
         public async Task Initialize()
         {
-            Token = await _localStorageService.GetItem<string>(_tokenKey);
+            Token = await localStorageService.GetItem<string>(TOKEN);
         }
 
         public async Task Login(Login model)
         {
             var TokenResponse = await httpService.Post<TokenResponse>("account/login", model);
-            await _localStorageService.SetItem(_tokenKey, TokenResponse.Token);
+            await localStorageService.SetItem(TOKEN, TokenResponse.Token);
         }
 
         public async Task Logout()
         {
             Token = null;
-            await _localStorageService.RemoveItem(_tokenKey);
-            _navigationManager.NavigateTo("account/login");
+            await localStorageService.RemoveItem(TOKEN);
+            navigationManager.NavigateTo("account/login");
         }
 
         public async Task Register(RegisterNewAccount model)
         {
-            await httpService.Post("account/register", model);
+            await httpService.Post("account/create", model);
         }
 
-        public async Task UpdateRegistration(RegistrationUpdate model)
+        public async Task Update(RegistrationUpdate model)
         {
-            await httpService.Put("account/UpdateRegistration", model);
+            await httpService.Put("account/update", model);
         }
 
-        public async Task<RegistrationUpdate> GetRegistrationInfoAsync()
+        public async Task<RegistrationUpdate> GetInfoAsync()
         {
-            var regInfo = await httpService.Get<RegistrationUpdate>("account/getRegistrationInfo");
+            var regInfo = await httpService.Get<RegistrationUpdate>("account/getInfo");
             return regInfo;
         }
 
         public async Task VerifyEmail(Guid secretGuid)
         {
             await httpService.Post($"account/verifyEmail?secretGuid={secretGuid}", null);
+        }
+
+        public async Task<bool> CheckPasswordReset(CheckPasswordResetRequest checkRequest)
+        {
+            return await httpService.Post<bool>($"account/checkPasswordReset", checkRequest);
+        }
+
+        public async Task RequestPasswordReset(string email)
+        {
+            await httpService.Post<bool>($"account/requestPasswordReset?email={email}", null);
+        }
+
+        public async Task ResetPassword(PasswordResetRequest request)
+        {
+            await httpService.Post<bool>($"account/resetPassword", request);
         }
     }
 }
