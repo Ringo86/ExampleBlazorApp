@@ -26,20 +26,16 @@ namespace ExampleBlazorApp.Client.Services
         private HttpClient httpClient;
         private NavigationManager navigationManager;
         private ILocalStorageService localStorageService;
-        private IConfiguration config;
         private const string TOKEN = "token";
 
         public HttpService(
             HttpClient httpClient,
             NavigationManager navigationManager,
-            ILocalStorageService localStorageService,
-            IConfiguration configuration
-        )
+            ILocalStorageService localStorageService)
         {
             this.httpClient = httpClient;
             this.navigationManager = navigationManager;
             this.localStorageService = localStorageService;
-            config = configuration;
         }
 
         public async Task<T> Get<T>(string uri, object? value = null)

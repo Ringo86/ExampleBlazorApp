@@ -46,6 +46,7 @@ namespace ExampleBlazorApp.Client.Services
         {
             var TokenResponse = await httpService.Post<TokenResponse>("account/login", model);
             await localStorageService.SetItem(TOKEN, TokenResponse.Token);
+            Token = TokenResponse.Token;
         }
 
         public async Task Logout()
