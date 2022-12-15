@@ -18,7 +18,7 @@ namespace ExampleBlazorApp.Client.Services
 
         public async Task<int> GetMessageBoard(GetMessageRequest getRequest)
         {
-            return await httpService.Get<int>("messageBoard", getRequest);
+            return await httpService.Post<int>("messageBoard/getMessage", getRequest);
         }
     }
 }

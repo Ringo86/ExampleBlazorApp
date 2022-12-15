@@ -1,17 +1,13 @@
 ﻿@page "/messageBoard"
 @using ExampleBlazorApp.Client.Models.MessageBoard
-@inject IMessageBoardViewModel viewModel;
+@inject MessageBoardViewModel viewModel;
 
 <h3>MessageBoard</h3>
 
-<button disabled="@viewModel.IsBusy" class="btn btn-primary" onclick="() => @viewModel.GetMessageBoard(getRequest)">
+<button disabled="@viewModel.IsBusy" class="btn btn-primary" @onclick="viewModel.GetMessageBoard">
     @if (viewModel.IsBusy)
     {
         <span class="spinner-border spinner-border-sm mr-1"></span>
     }
     Get
 </button>
-
-@code {
-    GetMessageRequest getRequest = new();
-}

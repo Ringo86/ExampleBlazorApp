@@ -3,27 +3,26 @@ using ExampleBlazorApp.Client.Services;
 
 namespace ExampleBlazorApp.Client.ViewModels
 {
-    public interface IMessageBoardViewModel
-    {
-        bool IsBusy { get; }
-        Task GetMessageBoard(GetMessageRequest getRequest);
-    }
-
-    public class MessageBoardViewModel: IMessageBoardViewModel
+    public class MessageBoardViewModel : BaseViewModel
     {
         private readonly IMessageBoardService messageBoardService;
+
+        public GetMessageRequest Model
+        {
+            get;
+            private set;
+        } = new();
+
 
         public MessageBoardViewModel(IMessageBoardService messageBoardService)
         {
             this.messageBoardService = messageBoardService;
         }
 
-        public bool IsBusy { get; private set; }
-
-        public async Task GetMessageBoard(GetMessageRequest getRequest)
+        public async Task GetMessageBoard()
         {
             IsBusy = true;
-            int result = await messageBoardService.GetMessageBoard(getRequest);
+            int result = await messageBoardService.GetMessageBoard(Model);
             IsBusy = false;
         }
     }

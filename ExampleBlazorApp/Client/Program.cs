@@ -21,6 +21,7 @@ builder.Services
                 .AddScoped<IMessageBoardService, MessageBoardService>();
 
 builder.Services.AddTransient<LoginViewModel>();
+builder.Services.AddTransient<MessageBoardViewModel>();
 
 
 // configure http client

@@ -12,7 +12,7 @@ namespace ExampleBlazorApp.Client.Services
 {
     public interface IHttpService
     {
-        Task<T> Get<T>(string uri, object? value = null);
+        Task<T> Get<T>(string uri);
         Task Post(string uri, object value);
         Task<T> Post<T>(string uri, object value);
         Task Put(string uri, object value);
@@ -41,13 +41,9 @@ namespace ExampleBlazorApp.Client.Services
             this.alertService = (AlertService)alertService;
         }
 
-        public async Task<T> Get<T>(string uri, object? value = null)
+        public async Task<T> Get<T>(string uri)
         {
-            HttpRequestMessage request;
-            if (value == null)
-                request = new HttpRequestMessage(HttpMethod.Get, uri);
-            else
-                request = createRequest(HttpMethod.Get, uri, value);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
             return await sendRequest<T>(request);
         }
 
@@ -116,27 +112,35 @@ namespace ExampleBlazorApp.Client.Services
 
         private async Task<T?> sendRequest<T>(HttpRequestMessage request)
         {
-            await addJwtHeader(request);
-
-            // send request
-            using var response = await httpClient.SendAsync(request);
-
-            // auto logout on 401 response
-            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            try
             {
-                navigationManager.NavigateTo("account/logout");
+                await addJwtHeader(request);
+
+                // send request
+                using var response = await httpClient.SendAsync(request);
+
+                // auto logout on 401 response
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    navigationManager.NavigateTo("account/logout");
+                    return default;
+                }
+
+                if (await handleErrors(response))
+                {
+                    return default;
+                }
+
+                var options = new JsonSerializerOptions();
+                options.PropertyNameCaseInsensitive = true;
+                options.Converters.Add(new StringConverter());
+                return await response.Content.ReadFromJsonAsync<T>(options);
+            }
+            catch (Exception ex)
+            {
+                alertService.Error(ex.Message);
                 return default;
             }
-
-            if(await handleErrors(response))
-            {
-                return default;
-            }
-
-            var options = new JsonSerializerOptions();
-            options.PropertyNameCaseInsensitive = true;
-            options.Converters.Add(new StringConverter());
-            return await response.Content.ReadFromJsonAsync<T>(options);
         }
 
         private async Task addJwtHeader(HttpRequestMessage request)
@@ -165,14 +169,18 @@ namespace ExampleBlazorApp.Client.Services
                         var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
                         alertService.Error(error["message"]);
                     }
-                    //DOING reverse engineer the class
                     else if (mediaTypeString == "application/problem+json")
                     {//TODO: deal with specifically application/problem+json response types
-                        string responseString = await response.Content.ReadAsStringAsync();
-                        var details = await JsonSerializer.DeserializeAsync<ApiErrorDetails>(response.Content.ReadAsStream());
+                        byte[] responseBytes = await response.Content.ReadAsByteArrayAsync();
+                        string test = Encoding.UTF8.GetString(responseBytes);
+                        JsonSerializerOptions options = new JsonSerializerOptions()
+                        {
+                            PropertyNameCaseInsensitive = true,
+                        };
+                        var details = await JsonSerializer.DeserializeAsync<ApiErrorDetails>(await response.Content.ReadAsStreamAsync(), options);
                         string errorList = string.Empty;
                         if (details.Errors != null && details.Errors.Count > 0)
-                            errorList = string.Join(',', details.Errors.Values);
+                            errorList = string.Join('|', details.Errors.Values.Select(v => String.Join('|', v)));
                         alertService.Error(errorList);
                     }
                     else
