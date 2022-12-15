@@ -26,16 +26,19 @@ namespace ExampleBlazorApp.Client.Services
         private HttpClient httpClient;
         private NavigationManager navigationManager;
         private ILocalStorageService localStorageService;
+        private readonly AlertService alertService;
         private const string TOKEN = "token";
 
         public HttpService(
             HttpClient httpClient,
             NavigationManager navigationManager,
-            ILocalStorageService localStorageService)
+            ILocalStorageService localStorageService,
+            IAlertService alertService)
         {
             this.httpClient = httpClient;
             this.navigationManager = navigationManager;
             this.localStorageService = localStorageService;
+            this.alertService = (AlertService)alertService;
         }
 
         public async Task<T> Get<T>(string uri, object? value = null)
@@ -111,7 +114,7 @@ namespace ExampleBlazorApp.Client.Services
             await handleErrors(response);
         }
 
-        private async Task<T> sendRequest<T>(HttpRequestMessage request)
+        private async Task<T?> sendRequest<T>(HttpRequestMessage request)
         {
             await addJwtHeader(request);
 
@@ -125,7 +128,10 @@ namespace ExampleBlazorApp.Client.Services
                 return default;
             }
 
-            await handleErrors(response);
+            if(await handleErrors(response))
+            {
+                return default;
+            }
 
             var options = new JsonSerializerOptions();
             options.PropertyNameCaseInsensitive = true;
@@ -142,11 +148,13 @@ namespace ExampleBlazorApp.Client.Services
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
-        private async Task handleErrors(HttpResponseMessage response)
+        private async Task<bool> handleErrors(HttpResponseMessage response)
         {
+            bool hasError = false;
             // throw exception on error response
             if (!response.IsSuccessStatusCode)
             {
+                hasError = true;
                 try
                 {
                     string mediaTypeString = string.Empty;
@@ -155,7 +163,7 @@ namespace ExampleBlazorApp.Client.Services
                     if (mediaTypeString == "application/json")
                     {
                         var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-                        throw new Exception(error["message"]);
+                        alertService.Error(error["message"]);
                     }
                     //DOING reverse engineer the class
                     else if (mediaTypeString == "application/problem+json")
@@ -165,12 +173,12 @@ namespace ExampleBlazorApp.Client.Services
                         string errorList = string.Empty;
                         if (details.Errors != null && details.Errors.Count > 0)
                             errorList = string.Join(',', details.Errors.Values);
-                        throw new Exception(errorList);
+                        alertService.Error(errorList);
                     }
                     else
                     {
                         string responseString = await response.Content.ReadAsStringAsync();
-                        throw new Exception(responseString);
+                        alertService.Error(responseString);
                     }
 
                     //var mediaType = response.Content.Headers.ContentType?.MediaType;
@@ -180,7 +188,6 @@ namespace ExampleBlazorApp.Client.Services
                     //    problemDetails.
                     //    //throw new ProblemDetailsException(problemDetails, response);
                     //}
-
                 }
                 catch (Exception ex)
                 {
@@ -188,9 +195,10 @@ namespace ExampleBlazorApp.Client.Services
                     Console.WriteLine(ex.Message);
 #endif
                     //TODO: improve this error reporting ASAP
-                    throw new Exception("An error has occured.");
+                    alertService.Error("An error has occured.");
                 }
             }
+            return hasError;
         }
     }
 }

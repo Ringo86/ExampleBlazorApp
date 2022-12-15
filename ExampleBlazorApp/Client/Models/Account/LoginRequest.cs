@@ -2,7 +2,7 @@
 
 namespace ExampleBlazorApp.Client.Models.Account
 {
-    public class Login
+    public class LoginRequest
     {
         [Required]
         public string Email { get; set; }

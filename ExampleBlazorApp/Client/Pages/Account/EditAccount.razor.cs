@@ -35,8 +35,8 @@ namespace ExampleBlazorApp.Client.Pages.Account
             try
             {
                 await AccountService.Update(model);
-                var returnUrl = NavigationManager.QueryString("returnUrl") ?? "";
-                NavigationManager.NavigateTo(returnUrl);
+                //var returnUrl = NavigationManager.QueryString("returnUrl") ?? "";
+                //NavigationManager.NavigateTo(returnUrl);
             }
             catch (Exception ex)
             {

@@ -7,7 +7,7 @@ namespace ExampleBlazorApp.Client.Services
     {
         string Token { get; }
         Task Initialize();
-        Task Login(Login model);
+        Task<bool> Login(LoginRequest model);
         Task Logout();
         Task Register(RegisterNewAccount model);
         Task Update(RegistrationUpdate model);
@@ -42,16 +42,19 @@ namespace ExampleBlazorApp.Client.Services
             Token = await localStorageService.GetItem<string>(TOKEN);
         }
 
-        public async Task Login(Login model)
+        public async Task<bool> Login(LoginRequest model)
         {
             var TokenResponse = await httpService.Post<TokenResponse>("account/login", model);
-            await localStorageService.SetItem(TOKEN, TokenResponse.Token);
+            if(TokenResponse == null)
+                return false;
             Token = TokenResponse.Token;
+            await localStorageService.SetItem(TOKEN, TokenResponse.Token);
+            return true;
         }
 
         public async Task Logout()
         {
-            Token = null;
+            Token = "";
             await localStorageService.RemoveItem(TOKEN);
             navigationManager.NavigateTo("account/login");
         }

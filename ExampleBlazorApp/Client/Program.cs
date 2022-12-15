@@ -20,7 +20,7 @@ builder.Services
                 .AddScoped<ILocalStorageService, LocalStorageService>()
                 .AddScoped<IMessageBoardService, MessageBoardService>();
 
-builder.Services.AddTransient<IMessageBoardViewModel,MessageBoardViewModel>();
+builder.Services.AddTransient<LoginViewModel>();
 
 
 // configure http client
