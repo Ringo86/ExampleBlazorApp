@@ -170,14 +170,14 @@ namespace ExampleBlazorApp.Client.Services
                         alertService.Error(error["message"]);
                     }
                     else if (mediaTypeString == "application/problem+json")
-                    {//TODO: deal with specifically application/problem+json response types
+                    {
                         byte[] responseBytes = await response.Content.ReadAsByteArrayAsync();
                         string test = Encoding.UTF8.GetString(responseBytes);
                         JsonSerializerOptions options = new JsonSerializerOptions()
                         {
                             PropertyNameCaseInsensitive = true,
                         };
-                        var details = await JsonSerializer.DeserializeAsync<ApiErrorDetails>(await response.Content.ReadAsStreamAsync(), options);
+                        var details = await JsonSerializer.DeserializeAsync<ApiErrorDetails>(await response.Content.ReadAsStreamAsync(), options) ?? new();
                         string errorList = string.Empty;
                         if (details.Errors != null && details.Errors.Count > 0)
                             errorList = string.Join('|', details.Errors.Values.Select(v => String.Join('|', v)));
@@ -188,14 +188,6 @@ namespace ExampleBlazorApp.Client.Services
                         string responseString = await response.Content.ReadAsStringAsync();
                         alertService.Error(responseString);
                     }
-
-                    //var mediaType = response.Content.Headers.ContentType?.MediaType;
-                    //if (mediaType != null && mediaType.Equals("application/problem+json", StringComparison.InvariantCultureIgnoreCase))
-                    //{
-                    //    var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(await response.Content.ReadAsStringAsync());
-                    //    problemDetails.
-                    //    //throw new ProblemDetailsException(problemDetails, response);
-                    //}
                 }
                 catch (Exception ex)
                 {
